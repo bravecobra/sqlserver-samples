@@ -49,7 +49,7 @@ What it boils down to are a handful of questions that need to be answered (partl
 
 ### Trhough Replication
 
+1. [Transaction replication](./mssql-replication-docker/readme.md)
 1. ~~Setup example replication snapshot~~
-1. ~~Setup example replication transation~~
 1. ~~Setup example replication peer-to-peer~~
 1. ~~Setup example replication merge~~
