@@ -12,6 +12,7 @@ RUN add-apt-repository "$(wget -qO- https://packages.microsoft.com/config/ubuntu
 RUN apt-get update
 RUN apt-get install -y mssql-server
 
+RUN mkdir /var/opt/mssql/ReplData
 RUN /opt/mssql/bin/mssql-conf set hadr.hadrenabled  1
 RUN /opt/mssql/bin/mssql-conf set sqlagent.enabled true
 

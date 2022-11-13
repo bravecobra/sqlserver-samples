@@ -2,7 +2,7 @@
 
 Ref: [Stack Overflow article](https://dba.stackexchange.com/questions/53815/clustering-vs-transactional-replication-vs-availability-groups)
 
-## Replication vs High Availability
+## Replication vs High Availability vs Failover
 
 ### SQL Server Failover Cluster Instance
 
@@ -39,17 +39,49 @@ What it boils down to are a handful of questions that need to be answered (partl
 * What kind of reporting will be taking place and what latencies are acceptable?
 * What do we need to handle with geographically dispersed HA? (storage replication is expensive, but a must with an FCI. AGs don't require shared storage from standalone instances, and you could use a file share witness for quorum potentially eliminating the need for shared storage)
 
+## Use cases
+
+### AlwaysOn Availability Groups Use Cases
+
+* [https://docs.microsoft.com/en-us/sql/sql-server/editions-and-components-of-sql-server-2017?view=sql-server-ver15#RDBMSHA](https://docs.microsoft.com/en-us/sql/sql-server/editions-and-components-of-sql-server-2017?view=sql-server-ver15#RDBMSHA)
+* [https://docs.microsoft.com/en-us/sql/database-engine/sql-server-business-continuity-dr?view=sql-server-ver15](https://docs.microsoft.com/en-us/sql/database-engine/sql-server-business-continuity-dr?view=sql-server-ver15)
+
+> Only enterprise edition has this. Standard edition has only basic availabity groups, which limit to 1 database and only 2 secondaries which have no read access. This is intended to replaced the database mirroring feature
+
+With a database encryption key, backups become encrypted as well and unrestorable with the key.
+
+### AlwaysOn Failover Cluster Instance
+
+### Database Mirroring
+
+> This is the replacement of availability groups
+
+### Log shipping
+
+### Backup Restore
+
+On Azure, allows backup to blob storage
+
 ## In practise
+
+Edit your hosts file to resolve the used names to `127.0.0.1`.
+
+```text
+127.0.0.1 publisher publisher.lab.local subscriber subscriber.lab.local distributor distributor.lab.local witness witness.lab.local
+```
+
+### Through a Failover Cluster Instance
+
+1. ~~Failover Instance~~
 
 ### Through a High Availability Group
 
 1. [Readonly Replicas through HA](./read-replicas-ha-docker/readme.md)
 1. ~~TDE Database encryption in HA~~
-1. ~~Setup failover~~
 
-### Trhough Replication
+### Through Replication
 
-1. [Transaction replication](./mssql-replication-docker/readme.md)
+1. [Transaction replication](./mssql-replication-transactions/readme.md)
 1. ~~Setup example replication snapshot~~
 1. ~~Setup example replication peer-to-peer~~
 1. ~~Setup example replication merge~~

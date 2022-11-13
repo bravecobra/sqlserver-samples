@@ -4,10 +4,9 @@ Ref: [https://medium.com/@gareth.newman/sql-server-replication-on-docker-a-glimp
 
 ## Step 1: Custom Dockerfile
 
-We want to use a custom Dockerfile where high avalability and sql agent is enabled.
+We want to use a custom Dockerfile where high avalability and sql agent is enabled from the root folder
 
 ```bash
-cd ./read-replicas-ha-docker
 docker build -t sqlag:ha .
 ```
 
@@ -20,16 +19,8 @@ Create three nodes with `docker-compose`:
 * sqlNode3: distributor
 
 ```bash
+cd ./mssql-replication-docker
 docker-compose up -d
-```
-
-We also require a directory on the distributor to keep replication data. Exec into the container and create the directory.
-
->TODO: create this directory through an init container
-
-```bash
-docker exec -it distributor bin/bash
-mkdir /var/opt/mssql/ReplData
 ```
 
 ## Create the distributor
@@ -46,7 +37,9 @@ EXEC sp_adddistributiondb @database = 'distribution';
 
 -- step 3, tell the distributor who the publisher is
 -- NOTE! (make the directory '/var/opt/mssql/ReplData',
--- it doesn't exist and this command will try and verify that it does. See step 2)
+-- it doesn't exist and this command will try and verify that it does.
+-- We created that directory in the dockerfile itself,
+-- but in case you need it afterwards, execute the following:
 -- docker exec -it distributor bin/bash
 -- mkdir /var/opt/mssql/ReplData
 -- CTRL+Z get back out

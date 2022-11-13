@@ -1,11 +1,12 @@
 # Setup MSSQL read-replicas with High-Availablitity
 
+Ref: [https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-availability-group-configure-rs?view=sql-server-2017](https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-availability-group-configure-rs?view=sql-server-2017)
+
 ## Step 1: Custom Dockerfile
 
-We want to use a custom Dockerfile where high avalability and sql agent is enabled.
+We want to use a custom Dockerfile where high avalability and sql agent is enabled from the root folder
 
 ```bash
-cd ./read-replicas-ha-docker
 docker build -t sqlag:ha .
 ```
 
@@ -18,6 +19,7 @@ Create three nodes with `docker-compose`:
 * sqlNode3: Secondary server
 
 ```bash
+cd ./read-replicas-ha-docker
 docker-compose up -d
 ```
 
