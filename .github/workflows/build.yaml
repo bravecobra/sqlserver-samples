@@ -12,9 +12,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
       - name: Add hosts to /etc/hosts
         run: |
           sudo echo "127.0.0.1 publisher publisher.lab.local subscriber subscriber.lab.local distributor distributor.lab.local witness witness.lab.local" | sudo tee -a /etc/hosts
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: sqlag
+          flavor: |
+            latest=false
+          tags: |
+            type=raw,value=ha
+
+      - name: Build and push sqlag Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
 
       - name: Docker-compose up
         run: |
@@ -23,10 +44,3 @@ jobs:
       - name: Docker-compose down
         run: |
           docker-compose -f ./mssql-replication-transactions/docker-compose.yaml down --volumes
-
-  build_readonly_replicas:
-    runs-on: ubuntu-latest
-    name: Build Snapshot Replication
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
