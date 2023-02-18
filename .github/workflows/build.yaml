@@ -27,7 +27,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push sqlag Docker image
+      - name: Build sqlag Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -51,6 +51,13 @@ jobs:
       - name: Add hosts to /etc/hosts
         run: |
           sudo echo "127.0.0.1 publisher publisher.lab.local subscriber subscriber.lab.local distributor distributor.lab.local witness witness.lab.local" | sudo tee -a /etc/hosts
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+
+      - name: Load Docker image
+        run: |
+          find . -type f -name '*.tar' -exec docker load --input {} \;
+          docker image ls -a
       - name: Docker-compose up
         run: |
           docker-compose -f ./mssql-replication-transactions/docker-compose.yaml up -d --remove-orphans
