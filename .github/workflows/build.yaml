@@ -48,19 +48,31 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Add hosts to /etc/hosts
-        run: |
-          sudo echo "127.0.0.1 publisher publisher.lab.local subscriber subscriber.lab.local distributor distributor.lab.local witness witness.lab.local" | sudo tee -a /etc/hosts
       - name: Download artifact
         uses: actions/download-artifact@v3
-
       - name: Load Docker image
         run: |
           find . -type f -name '*.tar' -exec docker load --input {} \;
           docker image ls -a
+      - name: Add hosts to /etc/hosts
+        run: |
+          sudo echo "127.0.0.1 publisher publisher.lab.local subscriber subscriber.lab.local distributor distributor.lab.local witness witness.lab.local" | sudo tee -a /etc/hosts
       - name: Docker-compose up
         run: |
           docker-compose -f ./mssql-replication-transactions/docker-compose.yaml up -d --remove-orphans
+
+      - name: Grab DockerID's
+        run: |
+          echo "SQLNODE1_CONTAINER_ID=$(docker ps --all --filter name=sqlNode1 --no-trunc --format "{{.ID}}")" >> $GITHUB_ENV
+          echo "SQLNODE2_CONTAINER_ID=$(docker ps --all --filter name=sqlNode2 --no-trunc --format "{{.ID}}")" >> $GITHUB_ENV
+          echo "SQLNODE3_CONTAINER_ID=$(docker ps --all --filter name=sqlNode3 --no-trunc --format "{{.ID}}")" >> $GITHUB_ENV
+
+      - name: Exec SQL on each node
+        run: |
+          docker exec -i $SQLNODE1_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" -Q "SELECT * FROM INFORMATION_SCHEMA.COLUMNS"
+          docker exec -i $SQLNODE2_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" -Q "SELECT * FROM INFORMATION_SCHEMA.COLUMNS"
+          docker exec -i $SQLNODE3_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" -Q "SELECT * FROM INFORMATION_SCHEMA.COLUMNS"
+
       - name: Docker-compose down
         run: |
           docker-compose -f ./mssql-replication-transactions/docker-compose.yaml down --volumes
