@@ -89,11 +89,11 @@ jobs:
         run: |
           docker exec -i $SQLNODE1_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/enable_replications.sql
 
-      - name: Setup replications
+      - name: Insert extra row
         run: |
           docker exec -i $SQLNODE1_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/insert_extra_row.sql
 
-      - name: Setup replications
+      - name: Verify extra row on publisher
         run: |
           docker exec -i $SQLNODE2_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/verify_replication.sql
 

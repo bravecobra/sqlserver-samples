@@ -1,3 +1,6 @@
+USE [Sales];
+GO
+
 INSERT INTO CUSTOMER
 (
     CustomerID,
