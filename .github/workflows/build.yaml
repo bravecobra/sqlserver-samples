@@ -93,8 +93,8 @@ jobs:
         run: |
           docker exec -i $SQLNODE1_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/insert_extra_row.sql
 
-      - name: Sleep for 2 seconds
-        run: sleep 2s
+      - name: Sleep for 10 seconds
+        run: sleep 10s
         shell: bash
 
       - name: Verify extra row on publisher
