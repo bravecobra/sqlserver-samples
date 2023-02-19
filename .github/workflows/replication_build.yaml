@@ -16,36 +16,43 @@ jobs:
       - name: Docker-compose up
         run: |
           docker-compose -f ./mssql-replication-transactions/docker-compose.yml -f ./mssql-replication-transactions/docker-compose.clean.yml up -d --remove-orphans
-      - name: Sleep for 20 seconds to allow SQL Server to spin up
-        run: sleep 20s
+      - name: Sleep for 30 seconds to allow SQL Server to spin up
+        run: sleep 30s
         shell: bash
+
+      - name: Grab DockerID's
+        run: |
+          echo "SQLNODE1=$(docker ps --all --filter name=sqlNode1 --no-trunc --format "{{.ID}}")" >> $GITHUB_ENV
+          echo "SQLNODE2=$(docker ps --all --filter name=sqlNode2 --no-trunc --format "{{.ID}}")" >> $GITHUB_ENV
+          echo "SQLNODE3=$(docker ps --all --filter name=sqlNode3 --no-trunc --format "{{.ID}}")" >> $GITHUB_ENV
+
       - name: Make the ReplData directories
         run: |
-          docker exec sqlNode1 mkdir /var/opt/mssql/ReplData
-          docker exec sqlNode2 mkdir /var/opt/mssql/ReplData
-          docker exec sqlNode3 mkdir /var/opt/mssql/ReplData
+          docker exec -i $SQLNODE1 mkdir /var/opt/mssql/ReplData
+          docker exec -i $SQLNODE2 mkdir /var/opt/mssql/ReplData
+          docker exec -i $SQLNODE3 mkdir /var/opt/mssql/ReplData
 
       - name: Create distributor
         run: |
-          docker exec sqlNode3 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_distributor.sql
-          docker exec sqlNode3 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/verify_distributor.sql
+          docker exec -i $SQLNODE3 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_distributor.sql
+          docker exec -i $SQLNODE3 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/verify_distributor.sql
 
       - name: Setup publisher
         run: |
-          docker exec sqlNode1 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_publisher.sql
-          docker exec sqlNode1 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_sales_db.sql
+          docker exec -i $SQLNODE1 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_publisher.sql
+          docker exec -i $SQLNODE1 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_sales_db.sql
 
       - name: Setup subscriber
         run: |
-          docker exec sqlNode2 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_sales_db.sql
+          docker exec -i $SQLNODE2 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_sales_db.sql
 
       - name: Setup replications
         run: |
-          docker exec sqlNode1 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/enable_replications.sql
+          docker exec -i $SQLNODE1 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/enable_replications.sql
 
       - name: Insert extra row
         run: |
-          docker exec sqlNode1 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/insert_extra_row.sql
+          docker exec -i $SQLNODE1 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/insert_extra_row.sql
 
       - name: Sleep for 10 seconds
         run: sleep 10s
@@ -53,7 +60,7 @@ jobs:
 
       - name: Verify extra row on publisher
         run: |
-          docker exec sqlNode2 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/verify_replication.sql
+          docker exec -i $SQLNODE2 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/verify_replication.sql
 
       - name: Docker-compose down
         run: |
