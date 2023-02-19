@@ -6,7 +6,7 @@ on:
 jobs:
   run_replication:
     runs-on: ubuntu-latest
-    name: Build Docker image
+    name: Replication transactions
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -15,7 +15,7 @@ jobs:
           sudo echo "127.0.0.1 publisher publisher.lab.local subscriber subscriber.lab.local distributor distributor.lab.local witness witness.lab.local" | sudo tee -a /etc/hosts
       - name: Docker-compose up
         run: |
-          docker-compose -f ./mssql-replication-transactions/docker-compose.yml -f ./mssql-replication-transactions/docker-compose.clean.yml up -d --remove-orphans
+          docker-compose -f ./mssql-replication-transactions/docker-compose.yml up -d --remove-orphans
       - name: Sleep for 30 seconds to allow SQL Server to spin up
         run: sleep 30s
         shell: bash
@@ -50,13 +50,13 @@ jobs:
         run: |
           docker exec -i $SQLNODE1 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/enable_replications.sql
 
-      - name: Insert extra row
-        run: |
-          docker exec -i $SQLNODE1 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/insert_extra_row.sql
-
       - name: Sleep for 10 seconds
         run: sleep 10s
         shell: bash
+
+      - name: Insert extra row
+        run: |
+          docker exec -i $SQLNODE1 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/insert_extra_row.sql
 
       - name: Verify extra row on publisher
         run: |
@@ -64,4 +64,4 @@ jobs:
 
       - name: Docker-compose down
         run: |
-          docker-compose -f ./mssql-replication-transactions/docker-compose.yml -f ./mssql-replication-transactions/docker-compose.clean.yml down --volumes
+          docker-compose -f ./mssql-replication-transactions/docker-compose.yml down --volumes
