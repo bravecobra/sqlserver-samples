@@ -25,6 +25,8 @@ docker-compose up -d
 
 ## Create the distributor
 
+Execute the next on the distributor:
+
 ```sql
 SELECT @@version AS Version
 SELECT @@SERVERNAME AS Server_Name
@@ -44,7 +46,12 @@ EXEC sp_adddistributiondb @database = 'distribution';
 -- mkdir /var/opt/mssql/ReplData
 -- CTRL+Z get back out
 EXEC sp_adddistpublisher @publisher = 'publisher', @distribution_db = 'distribution'
+GO
+```
 
+Let's verify
+
+```sql
 -- let's check the DB
 USE distribution;
 GO
@@ -60,6 +67,8 @@ ORDER by date_modified desc
 ```
 
 ## Create the publisher
+
+Execute the following on the `publisher`:
 
 ```sql
 -- make sure were on the right server
@@ -103,7 +112,7 @@ VALUES
 (0, 100);
 ```
 
-Rerun the above script on the subscriber so they have a common starting point.
+Rerun the above script on the `subscriber` so they have a common starting point.
 
 Now, let's enable the database for replication on the `publisher` with
 

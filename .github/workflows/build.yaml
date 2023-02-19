@@ -61,8 +61,8 @@ jobs:
         run: |
           docker-compose -f ./mssql-replication-transactions/docker-compose.yaml up -d --remove-orphans
 
-      - name: Sleep for 30 seconds to allow SQL Server to spin up
-        run: sleep 30s
+      - name: Sleep for 20 seconds to allow SQL Server to spin up
+        run: sleep 20s
         shell: bash
 
       - name: Grab DockerID's
@@ -71,11 +71,31 @@ jobs:
           echo "SQLNODE2_CONTAINER_ID=$(docker ps --all --filter name=sqlNode2 --no-trunc --format "{{.ID}}")" >> $GITHUB_ENV
           echo "SQLNODE3_CONTAINER_ID=$(docker ps --all --filter name=sqlNode3 --no-trunc --format "{{.ID}}")" >> $GITHUB_ENV
 
-      - name: Exec SQL on each node
+      - name: Create distributor
         run: |
-          docker exec -i $SQLNODE1_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" -Q "SELECT * FROM INFORMATION_SCHEMA.COLUMNS"
-          docker exec -i $SQLNODE2_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" -Q "SELECT * FROM INFORMATION_SCHEMA.COLUMNS"
-          docker exec -i $SQLNODE3_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" -Q "SELECT * FROM INFORMATION_SCHEMA.COLUMNS"
+          docker exec -i $SQLNODE3_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_distributor.sql
+          docker exec -i $SQLNODE3_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/verify_distributor.sql
+
+      - name: Setup publisher
+        run: |
+          docker exec -i $SQLNODE1_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_publisher.sql
+          docker exec -i $SQLNODE1_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_sales_db.sql
+
+      - name: Setup subscriber
+        run: |
+          docker exec -i $SQLNODE2_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_sales_db.sql
+
+      - name: Setup replications
+        run: |
+          docker exec -i $SQLNODE1_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/enable_replications.sql
+
+      - name: Setup replications
+        run: |
+          docker exec -i $SQLNODE1_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/insert_extra_row.sql
+
+      - name: Setup replications
+        run: |
+          docker exec -i $SQLNODE2_CONTAINER_ID /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/verify_replication.sql
 
       - name: Docker-compose down
         run: |

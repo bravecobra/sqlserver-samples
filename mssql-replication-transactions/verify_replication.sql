@@ -1,0 +1,2 @@
+select * from CUSTOMER;
+GO
