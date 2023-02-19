@@ -5,3 +5,4 @@ SELECT @@SERVERNAME AS Server_Name;
 -- tell the publisher who the remote distributor is
 EXEC sp_adddistributor @distributor = 'distributor',
                        @password = 'Password1';
+GO
