@@ -62,6 +62,10 @@ jobs:
         run: sleep 10s
         shell: bash
 
+      - name: Display Status
+        run: |
+          docker exec -i $SQLNODE3 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" -Q "SELECT * FROM [distribution].[dbo].[MSdistribution_history]"
+
       - name: Verify extra row on publisher
         run: |
           docker exec -i $SQLNODE2 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/verify_replication.sql
