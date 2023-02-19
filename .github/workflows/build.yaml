@@ -61,6 +61,10 @@ jobs:
         run: |
           docker-compose -f ./mssql-replication-transactions/docker-compose.yaml up -d --remove-orphans
 
+      - name: Sleep for 30 seconds to allow SQL Server to spin up
+        run: sleep 30s
+        shell: bash
+
       - name: Grab DockerID's
         run: |
           echo "SQLNODE1_CONTAINER_ID=$(docker ps --all --filter name=sqlNode1 --no-trunc --format "{{.ID}}")" >> $GITHUB_ENV
