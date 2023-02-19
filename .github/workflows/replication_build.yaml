@@ -1,0 +1,60 @@
+name: Build replication
+
+on:
+  push:
+
+jobs:
+  run_replication:
+    runs-on: ubuntu-latest
+    name: Build Docker image
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Add hosts to /etc/hosts
+        run: |
+          sudo echo "127.0.0.1 publisher publisher.lab.local subscriber subscriber.lab.local distributor distributor.lab.local witness witness.lab.local" | sudo tee -a /etc/hosts
+      - name: Docker-compose up
+        run: |
+          docker-compose -f ./mssql-replication-transactions/docker-compose.yml -f ./mssql-replication-transactions/docker-compose.clean.yml up -d --remove-orphans
+      - name: Sleep for 20 seconds to allow SQL Server to spin up
+        run: sleep 20s
+        shell: bash
+      - name: Make the ReplData directories
+        run: |
+          docker exec sqlNode1 mkdir /var/opt/mssql/ReplData
+          docker exec sqlNode2 mkdir /var/opt/mssql/ReplData
+          docker exec sqlNode3 mkdir /var/opt/mssql/ReplData
+
+      - name: Create distributor
+        run: |
+          docker exec sqlNode3 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_distributor.sql
+          docker exec sqlNode3 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/verify_distributor.sql
+
+      - name: Setup publisher
+        run: |
+          docker exec sqlNode1 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_publisher.sql
+          docker exec sqlNode1 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_sales_db.sql
+
+      - name: Setup subscriber
+        run: |
+          docker exec sqlNode2 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/create_sales_db.sql
+
+      - name: Setup replications
+        run: |
+          docker exec sqlNode1 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/enable_replications.sql
+
+      - name: Insert extra row
+        run: |
+          docker exec sqlNode1 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/insert_extra_row.sql
+
+      - name: Sleep for 10 seconds
+        run: sleep 10s
+        shell: bash
+
+      - name: Verify extra row on publisher
+        run: |
+          docker exec sqlNode2 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "Password1" < ./mssql-replication-transactions/verify_replication.sql
+
+      - name: Docker-compose down
+        run: |
+          docker-compose -f ./mssql-replication-transactions/docker-compose.yml -f ./mssql-replication-transactions/docker-compose.clean.yml down --volumes
