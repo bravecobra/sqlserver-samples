@@ -59,7 +59,7 @@ jobs:
           sudo echo "127.0.0.1 publisher publisher.lab.local subscriber subscriber.lab.local distributor distributor.lab.local witness witness.lab.local" | sudo tee -a /etc/hosts
       - name: Docker-compose up
         run: |
-          docker-compose -f ./mssql-replication-transactions/docker-compose.yaml up -d --remove-orphans
+          docker-compose -f ./mssql-replication-transactions/docker-compose.yml up -d --remove-orphans
 
       - name: Sleep for 20 seconds to allow SQL Server to spin up
         run: sleep 20s
@@ -103,4 +103,4 @@ jobs:
 
       - name: Docker-compose down
         run: |
-          docker-compose -f ./mssql-replication-transactions/docker-compose.yaml down --volumes
+          docker-compose -f ./mssql-replication-transactions/docker-compose.yml down --volumes

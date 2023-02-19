@@ -5,13 +5,13 @@ services:
     hostname: publisher
     domainname: lab.local
     environment:
-       SA_PASSWORD: "Password1"
-       ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Password1"
+      ACCEPT_EULA: "Y"
     ports:
     - "1501:1433"
     extra_hosts:
-       sqlNode2.lab.local: "172.16.238.22"
-       sqlNode3.lab.local: "172.16.238.23"
+      sqlNode2.lab.local: "172.16.238.22"
+      sqlNode3.lab.local: "172.16.238.23"
     networks:
       mssqlreplicas:
         ipv4_address: 172.16.238.21
